@@ -93,7 +93,7 @@ fn fuse_normal(
             }
         } else {
             for persona in personas_arcana.into_iter() {
-                if persona.level >= level {
+                if persona.level >= level && persona.rare.is_none() && persona.rare.is_none() {
                     return Some(persona.clone());
                 }
             }
@@ -115,6 +115,7 @@ fn get_arcana_recipe(
             {
                 if !(persona1.arcana == persona2.arcana && k <= j) {
                     let result_o = fuse_normal(persona1, persona2, &personas_by_arcana);
+
                     if let Some(result) = result_o {
                         recipes.push(Recipe {
                             sources: vec![persona1.clone(), persona2.clone()],
