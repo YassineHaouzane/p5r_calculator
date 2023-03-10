@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 pub const RARE_PERSONAS: [&str; 9] = [
     "Crystal Skull",
     "Koh-i-Noor",
@@ -39,35 +37,9 @@ pub const RARE_COMBOS: [(Arcana, [i32; 9]); 24] = [
     (World, [1, 1, 1, 1, 1, 1, 1, 1, 1]),
 ];
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone, Copy)]
-pub enum Arcana {
-    Fool,
-    Magician,
-    Priestess,
-    Empress,
-    Emperor,
-    Hierophant,
-    Lovers,
-    Chariot,
-    Justice,
-    Hermit,
-    Fortune,
-    Strength,
-    Hanged,
-    Death,
-    Temperance,
-    Devil,
-    Tower,
-    Star,
-    Moon,
-    Sun,
-    Judgement,
-    World,
-    Councillor,
-    Faith,
-}
-
 use Arcana::*;
+
+use crate::data_definitions::Arcana;
 
 pub struct ArcanaCombo {
     pub source: (Arcana, Arcana),
