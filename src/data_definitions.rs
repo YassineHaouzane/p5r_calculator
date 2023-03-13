@@ -34,9 +34,18 @@ pub struct Persona {
     pub name: String,
     //pub inherits: String,
     pub arcana: Arcana,
-    pub rare: Option<bool>,
-    pub special: Option<bool>,
+    rare: Option<bool>,
+    special: Option<bool>,
     pub level: u8,
+}
+
+impl Persona {
+    pub fn is_special(&self) -> bool {
+        self.special.is_some()
+    }
+    pub fn is_rare(&self) -> bool {
+        self.rare.is_some()
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

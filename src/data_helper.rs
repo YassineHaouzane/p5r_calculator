@@ -27,8 +27,8 @@ fn fuse_normal(
         if persona1.arcana == persona2.arcana {
             for persona in personas_arcana.into_iter().rev() {
                 if persona.level <= level
-                    && !(persona.special.is_some()
-                        || persona.rare.is_some()
+                    && !(persona.is_special()
+                        || persona.is_rare()
                         || persona.name == persona1.name
                         || persona.name == persona2.name)
                 {
@@ -37,7 +37,7 @@ fn fuse_normal(
             }
         } else {
             for persona in personas_arcana.into_iter() {
-                if persona.level >= level && persona.rare.is_none() && persona.rare.is_none() {
+                if persona.level >= level && !persona.is_special() && !persona.is_rare() {
                     return Some(persona.clone());
                 }
             }
@@ -54,8 +54,8 @@ fn get_arcana_recipe(
 ) -> () {
     for (k, persona1) in personas1.iter().enumerate() {
         for (j, persona2) in personas2.iter().enumerate() {
-            if !((persona1.rare.is_some() && persona2.rare.is_none())
-                || (persona2.rare.is_some() && persona1.rare.is_none()))
+            if !((persona1.is_rare() && !persona2.is_rare())
+                || (persona2.is_rare() && !persona1.is_rare()))
             {
                 if !(persona1.arcana == persona2.arcana && k <= j) {
                     let result_o = fuse_normal(persona1, persona2, &personas_by_arcana);
@@ -102,7 +102,7 @@ fn get_arcanas_recipes(arcana: Arcana, global_app_data: &GlobalAppData) -> Vec<R
                 find_persona(rare_persona_name.to_string(), global_personas).unwrap();
             let arcana_personas = personas_by_arcana.get(&arcana).unwrap();
             arcana_personas.into_iter().for_each(|normal_persona| {
-                if rare_persona.name != normal_persona.name {
+                if rare_persona != normal_persona {
                     let resulting_persona =
                         rare_fuse(normal_persona, personas_by_arcana, rare_index);
                     resulting_persona.into_iter().for_each(|result| {
@@ -152,7 +152,7 @@ fn rare_fuse(
     // The persona should exist in it's arcana array
     let main_persona_index = personas_main_arcana
         .iter()
-        .position(|x| x.name == normal_persona.name)
+        .position(|x| x == normal_persona)
         .unwrap() as i32;
     let mut new_persona_o =
         get_new_persona_from_rare_modifier(main_persona_index, rare_modifier, personas_main_arcana);
@@ -160,7 +160,7 @@ fn rare_fuse(
     // Couldn't come up with a better way to do this
     loop {
         match new_persona_o {
-            Some(new_persona) if new_persona.special.is_some() || new_persona.rare.is_some() => {
+            Some(new_persona) if new_persona.is_special() || new_persona.is_rare() => {
                 if rare_modifier > 0 {
                     rare_modifier = rare_modifier + 1;
                 } else if rare_modifier < 0 {
@@ -179,11 +179,11 @@ fn rare_fuse(
 }
 
 pub fn get_recipes(persona: &Persona, global_app_data: &GlobalAppData) -> Vec<Recipe> {
-    if persona.rare.is_some() {
+    if persona.is_rare() {
         return vec![];
     }
 
-    if persona.special.is_some() {
+    if persona.is_special() {
         let special_recipe = get_special_recipe(persona, &global_app_data.special_combos);
         return special_recipe.map_or(vec![], |recipe| vec![recipe]);
     }
@@ -197,10 +197,10 @@ pub fn get_recipes(persona: &Persona, global_app_data: &GlobalAppData) -> Vec<Re
 }
 
 fn get_special_recipe(persona: &Persona, special_combos: &Vec<Recipe>) -> Option<Recipe> {
-    if persona.special.is_none() {
+    if !persona.is_special() {
         eprintln!(
-            "Asking special recipe for non special persona: {}",
-            persona.name
+            "Asking special recipe for non special persona: {:?}",
+            persona
         );
         return None;
     }
