@@ -6,7 +6,7 @@ use crate::{
 };
 
 #[get("/personas")]
-async fn personas(p: web::Data<GlobalAppData>, req: HttpRequest) -> Result<impl Responder> {
+async fn get_personas(p: web::Data<GlobalAppData>, req: HttpRequest) -> Result<impl Responder> {
     Ok(web::Json(&p.personas).respond_to(&req))
 }
 
@@ -17,11 +17,6 @@ async fn get_recipes_of_persona(
 ) -> Result<impl Responder> {
     let global_personas = &p.personas;
     let persona = find_persona(persona_name.to_string(), global_personas).unwrap();
-    let recipes = get_recipes(
-        persona,
-        global_personas,
-        &p.personas_by_arcana,
-        &p.special_combos,
-    );
+    let recipes = get_recipes(persona, p.get_ref());
     Ok(web::Json(recipes))
 }

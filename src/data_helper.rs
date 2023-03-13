@@ -72,11 +72,12 @@ fn get_arcana_recipe(
     }
 }
 
-fn get_arcanas_recipes(
-    arcana: Arcana,
-    global_personas: &Vec<Persona>,
-    personas_by_arcana: &HashMap<Arcana, Vec<Persona>>,
-) -> Vec<Recipe> {
+fn get_arcanas_recipes(arcana: Arcana, global_app_data: &GlobalAppData) -> Vec<Recipe> {
+    let GlobalAppData {
+        personas: global_personas,
+        personas_by_arcana,
+        special_combos: _,
+    } = global_app_data;
     let mut recipes: Vec<Recipe> = vec![];
     let arcana_combos: Vec<ArcanaCombo> = ARCANA_2_COMBOS_ROYAL
         .into_iter()
@@ -186,22 +187,17 @@ fn is_good_recipe(recipe: &Recipe, persona: &Persona) -> bool {
     }
 }
 
-pub fn get_recipes(
-    persona: &Persona,
-    global_personas: &Vec<Persona>,
-    personas_by_arcana: &HashMap<Arcana, Vec<Persona>>,
-    special_combos: &Vec<Recipe>,
-) -> Vec<Recipe> {
+pub fn get_recipes(persona: &Persona, global_app_data: &GlobalAppData) -> Vec<Recipe> {
     if persona.rare.is_some() {
         return vec![];
     }
 
     if persona.special.is_some() {
-        let special_recipe = get_special_recipe(persona, special_combos);
+        let special_recipe = get_special_recipe(persona, &global_app_data.special_combos);
         return special_recipe.map_or(vec![], |recipe| vec![recipe]);
     }
 
-    let recipes = get_arcanas_recipes(persona.arcana, global_personas, personas_by_arcana);
+    let recipes = get_arcanas_recipes(persona.arcana, global_app_data);
     let filtered_recipes: Vec<Recipe> = recipes
         .into_iter()
         .filter(|recipe| is_good_recipe(recipe, &persona))
@@ -289,12 +285,7 @@ mod tests {
             .iter()
             .find(|x| x.name == "King Frost")
             .unwrap();
-        let recipes = get_recipes(
-            &king_frost,
-            &global_data.personas,
-            &global_data.personas_by_arcana,
-            &global_data.special_combos,
-        );
+        let recipes = get_recipes(&king_frost, &global_data.get_ref());
         assert_eq!(recipes.len(), 174);
     }
 }
