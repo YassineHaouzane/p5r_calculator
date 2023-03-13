@@ -255,6 +255,13 @@ mod tests {
     fn build_global_data_test() {
         let x = build_global_data();
         assert_eq!(x.personas.len(), 232);
+        assert_eq!(
+            x.personas_by_arcana
+                .get(&crate::data_definitions::Arcana::Fool)
+                .unwrap()
+                .len(),
+            17,
+        );
     }
     #[test]
     fn check_king_frost() {
