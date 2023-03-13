@@ -186,24 +186,19 @@ fn is_good_recipe(recipe: &Recipe, persona: &Persona) -> bool {
     }
 }
 
-pub fn find_persona(persona_name: String, global_personas: &Vec<Persona>) -> Option<&Persona> {
-    let persona_o = global_personas.into_iter().find(|x| x.name == persona_name);
-    persona_o
-}
-
 pub fn get_recipes(
     persona: &Persona,
     global_personas: &Vec<Persona>,
     personas_by_arcana: &HashMap<Arcana, Vec<Persona>>,
+    special_combos: &Vec<Recipe>,
 ) -> Vec<Recipe> {
     if persona.rare.is_some() {
         return vec![];
     }
 
     if persona.special.is_some() {
-        // Special fusions not implemented
-        println!("special persona is asked");
-        return vec![];
+        let special_recipe = get_special_recipe(persona, special_combos);
+        return special_recipe.map_or(vec![], |recipe| vec![recipe]);
     }
 
     let recipes = get_arcanas_recipes(persona.arcana, global_personas, personas_by_arcana);
@@ -214,11 +209,33 @@ pub fn get_recipes(
     filtered_recipes
 }
 
+fn get_special_recipe(persona: &Persona, special_combos: &Vec<Recipe>) -> Option<Recipe> {
+    if persona.special.is_none() {
+        eprintln!(
+            "Asking special recipe for non special persona: {}",
+            persona.name
+        );
+        return None;
+    }
+
+    special_combos
+        .iter()
+        .find(|&recipe| recipe.result.name == persona.name)
+        // Cloning to avoid shared reference
+        .map(|recipe| recipe.clone())
+}
+
 // Builders
 pub fn build_global_data() -> web::Data<GlobalAppData> {
     let path = "./data/P5R_data.json";
     let data = fs::read_to_string(path).expect("Unable to read file");
-    let mut personas: Vec<Persona> = serde_json::from_str(&data).unwrap();
+    let json_data: PersonaGameFusionData = serde_json::from_str(&data).unwrap();
+    let mut personas = json_data.personas;
+    let special_combos: Vec<Recipe> = json_data
+        .special_combos
+        .into_iter()
+        .map(|named_recipe| named_recipe.named_recipe_to_recipe(&personas))
+        .collect();
     personas.sort_by(|a, b| {
         if a.level == b.level {
             a.name.cmp(&b.name)
@@ -230,6 +247,7 @@ pub fn build_global_data() -> web::Data<GlobalAppData> {
     let global_data = GlobalAppData {
         personas,
         personas_by_arcana,
+        special_combos,
     };
     web::Data::new(global_data)
 }
@@ -275,6 +293,7 @@ mod tests {
             &king_frost,
             &global_data.personas,
             &global_data.personas_by_arcana,
+            &global_data.special_combos,
         );
         assert_eq!(recipes.len(), 174);
     }
