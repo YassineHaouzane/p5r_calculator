@@ -61,10 +61,10 @@ fn get_arcana_recipe(
                     let result_o = fuse_normal(persona1, persona2, &personas_by_arcana);
 
                     if let Some(result) = result_o {
-                        recipes.push(Recipe {
-                            sources: vec![persona1.clone(), persona2.clone()],
+                        recipes.push(Recipe::recipe(
+                            vec![persona1.clone(), persona2.clone()],
                             result,
-                        });
+                        ));
                     }
                 }
             }
@@ -106,10 +106,10 @@ fn get_arcanas_recipes(arcana: Arcana, global_app_data: &GlobalAppData) -> Vec<R
                     let resulting_persona =
                         rare_fuse(normal_persona, personas_by_arcana, rare_index);
                     resulting_persona.into_iter().for_each(|result| {
-                        recipes.push(Recipe {
-                            sources: vec![normal_persona.clone(), rare_persona.clone()],
-                            result: result.clone(),
-                        })
+                        recipes.push(Recipe::recipe(
+                            vec![normal_persona.clone(), rare_persona.clone()],
+                            result.clone(),
+                        ))
                     });
                 }
             });
@@ -178,15 +178,6 @@ fn rare_fuse(
     return new_persona_o;
 }
 
-fn is_good_recipe(recipe: &Recipe, persona: &Persona) -> bool {
-    let sources = &recipe.sources;
-    if sources[0].name == persona.name || sources[1].name == persona.name {
-        false
-    } else {
-        recipe.result.name == persona.name
-    }
-}
-
 pub fn get_recipes(persona: &Persona, global_app_data: &GlobalAppData) -> Vec<Recipe> {
     if persona.rare.is_some() {
         return vec![];
@@ -200,7 +191,7 @@ pub fn get_recipes(persona: &Persona, global_app_data: &GlobalAppData) -> Vec<Re
     let recipes = get_arcanas_recipes(persona.arcana, global_app_data);
     let filtered_recipes: Vec<Recipe> = recipes
         .into_iter()
-        .filter(|recipe| is_good_recipe(recipe, &persona))
+        .filter(|recipe| recipe.is_good_recipe(&persona))
         .collect();
     filtered_recipes
 }
@@ -216,7 +207,7 @@ fn get_special_recipe(persona: &Persona, special_combos: &Vec<Recipe>) -> Option
 
     special_combos
         .iter()
-        .find(|&recipe| recipe.result.name == persona.name)
+        .find(|&recipe| recipe.is_result(persona))
         // Cloning to avoid shared reference
         .map(|recipe| recipe.clone())
 }
@@ -263,6 +254,8 @@ pub fn build_persona_by_arcana(personas: &Vec<Persona>) -> HashMap<Arcana, Vec<P
 
 #[cfg(test)]
 mod tests {
+    use crate::data_definitions::find_persona;
+
     use super::{build_global_data, get_recipes};
 
     #[test]
@@ -277,15 +270,23 @@ mod tests {
             17,
         );
     }
+
+    // Normal fusion testing
     #[test]
     fn check_king_frost() {
         let global_data = build_global_data();
-        let king_frost = global_data
-            .personas
-            .iter()
-            .find(|x| x.name == "King Frost")
-            .unwrap();
-        let recipes = get_recipes(&king_frost, &global_data.get_ref());
+        let king_frost = find_persona("King Frost".to_string(), &global_data.personas).unwrap();
+        let recipes = get_recipes(king_frost, &global_data.get_ref());
         assert_eq!(recipes.len(), 174);
+    }
+
+    // Special fusion testing
+    #[test]
+    fn check_satanael() {
+        let global_data = build_global_data();
+        let satanael = find_persona("Satanael".to_string(), &global_data.personas).unwrap();
+        let recipes = get_recipes(satanael, &global_data.get_ref());
+        assert_eq!(recipes.len(), 1);
+        assert_eq!(recipes.get(0).unwrap().recipe_len(), 6);
     }
 }

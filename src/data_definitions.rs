@@ -29,7 +29,7 @@ pub enum Arcana {
     Faith,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Persona {
     pub name: String,
     //pub inherits: String,
@@ -41,8 +41,32 @@ pub struct Persona {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Recipe {
-    pub sources: Vec<Persona>,
-    pub result: Persona,
+    sources: Vec<Persona>,
+    result: Persona,
+}
+
+impl Recipe {
+    pub fn is_result(&self, persona: &Persona) -> bool {
+        &self.result == persona
+    }
+
+    pub fn is_good_recipe(&self, persona: &Persona) -> bool {
+        let sources = &self.sources;
+        if sources[0].name == persona.name || sources[1].name == persona.name {
+            false
+        } else {
+            &self.result == persona
+        }
+    }
+    pub fn recipe(sources: Vec<Persona>, result: Persona) -> Recipe {
+        Recipe { sources, result }
+    }
+
+    // For testing purposes
+    #[allow(dead_code)]
+    pub fn recipe_len(&self) -> usize {
+        self.sources.len()
+    }
 }
 
 #[derive(Serialize, Deserialize)]
