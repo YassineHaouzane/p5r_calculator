@@ -1,4 +1,5 @@
-use actix_web::{get, web, HttpRequest, Responder, Result};
+use actix_web::{error, get, web, HttpRequest, Responder, Result};
+use derive_more::{Display, Error};
 
 use crate::{
     data_definitions::{find_persona, GlobalAppData},
@@ -10,13 +11,28 @@ async fn get_personas(p: web::Data<GlobalAppData>, req: HttpRequest) -> Result<i
     Ok(web::Json(&p.personas).respond_to(&req))
 }
 
-#[get("/{persona_name}")]
+#[derive(Debug, Display, Error)]
+#[display(fmt = "Persona not found: {}", persona_name)]
+struct PersonaNotFound {
+    persona_name: String,
+}
+
+impl error::ResponseError for PersonaNotFound {}
+
+#[get("/recipes/{persona_name}")]
 async fn get_recipes_of_persona(
     persona_name: web::Path<String>,
     p: web::Data<GlobalAppData>,
-) -> Result<impl Responder> {
+) -> Result<impl Responder, PersonaNotFound> {
     let global_personas = &p.personas;
-    let persona = find_persona(persona_name.to_string(), global_personas).unwrap();
-    let recipes = get_recipes(persona, p.get_ref());
-    Ok(web::Json(recipes))
+    let persona_o = find_persona(persona_name.to_string(), global_personas);
+    if let Some(persona) = persona_o {
+        let recipes = get_recipes(persona, p.get_ref());
+        Ok(web::Json(recipes))
+    } else {
+        println!("Not found");
+        Err(PersonaNotFound {
+            persona_name: persona_name.into_inner(),
+        })
+    }
 }
