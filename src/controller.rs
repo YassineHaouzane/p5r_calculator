@@ -1,5 +1,6 @@
 use actix_web::{error, get, http::StatusCode, web, HttpRequest, Responder, Result};
 use derive_more::{Display, Error};
+use log::warn;
 
 use crate::{
     data_definitions::{find_persona, GlobalAppData},
@@ -34,9 +35,8 @@ async fn get_recipes_of_persona(
         let recipes = get_recipes(persona, p.get_ref());
         Ok(web::Json(recipes))
     } else {
-        println!("Not found");
-        Err(PersonaNotFound {
-            persona_name: persona_name.into_inner(),
-        })
+        let s = persona_name.into_inner();
+        warn!("Persona not found: {}", &s);
+        Err(PersonaNotFound { persona_name: s })
     }
 }

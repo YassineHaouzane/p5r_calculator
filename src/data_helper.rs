@@ -1,3 +1,4 @@
+use log::warn;
 use std::collections::HashMap;
 use std::fs;
 
@@ -91,7 +92,7 @@ fn get_arcanas_recipes(arcana: Arcana, global_app_data: &GlobalAppData) -> Vec<R
             (Some(personas1), Some(personas2)) => {
                 get_arcana_recipe(personas1, personas2, &personas_by_arcana, &mut recipes)
             }
-            x => println!("Could not find arcanas {:?}", x),
+            x => warn!("Could not find arcanas {:?}", x),
         }
     });
 
@@ -198,7 +199,7 @@ pub fn get_recipes(persona: &Persona, global_app_data: &GlobalAppData) -> Vec<Re
 
 fn get_special_recipe(persona: &Persona, special_combos: &Vec<Recipe>) -> Option<Recipe> {
     if !persona.is_special() {
-        eprintln!(
+        warn!(
             "Asking special recipe for non special persona: {:?}",
             persona
         );
