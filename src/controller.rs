@@ -1,4 +1,4 @@
-use actix_web::{error, get, web, HttpRequest, Responder, Result};
+use actix_web::{error, get, http::StatusCode, web, HttpRequest, Responder, Result};
 use derive_more::{Display, Error};
 
 use crate::{
@@ -17,7 +17,11 @@ struct PersonaNotFound {
     persona_name: String,
 }
 
-impl error::ResponseError for PersonaNotFound {}
+impl error::ResponseError for PersonaNotFound {
+    fn status_code(&self) -> StatusCode {
+        StatusCode::NOT_FOUND
+    }
+}
 
 #[get("/recipes/{persona_name}")]
 async fn get_recipes_of_persona(
