@@ -52,6 +52,7 @@ impl Persona {
 pub struct Recipe {
     sources: Vec<Persona>,
     result: Persona,
+    cost: u32,
 }
 
 impl Recipe {
@@ -67,8 +68,21 @@ impl Recipe {
             &self.result == persona
         }
     }
+
+    fn approx_cost(sources: &Vec<Persona>) -> u32 {
+        sources.into_iter().fold(0, |acc, p| {
+            let level = p.level as u32;
+            acc + (27 * level.pow(2)) + (126 * level) + 2147
+        })
+    }
+
     pub fn recipe(sources: Vec<Persona>, result: Persona) -> Recipe {
-        Recipe { sources, result }
+        let cost = Self::approx_cost(&sources);
+        Recipe {
+            sources,
+            result,
+            cost,
+        }
     }
 
     // For testing purposes
@@ -114,6 +128,6 @@ impl NamedRecipe {
             .into_iter()
             .map(|name| find_persona(name, personas).unwrap().clone())
             .collect();
-        Recipe { sources, result }
+        Recipe::recipe(sources, result)
     }
 }
