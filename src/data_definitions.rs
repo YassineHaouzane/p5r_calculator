@@ -69,14 +69,14 @@ impl Recipe {
         }
     }
 
-    fn approx_cost(sources: &Vec<Persona>) -> u32 {
-        sources.into_iter().fold(0, |acc, p| {
+    fn approx_cost(sources: &[Persona]) -> u32 {
+        sources.iter().fold(0, |acc, p| {
             let level = p.level as u32;
             acc + (27 * level.pow(2)) + (126 * level) + 2147
         })
     }
 
-    pub fn recipe(sources: Vec<Persona>, result: Persona) -> Recipe {
+    pub fn new(sources: Vec<Persona>, result: Persona) -> Recipe {
         let cost = Self::approx_cost(&sources);
         Recipe {
             sources,
@@ -100,9 +100,8 @@ pub struct GlobalAppData {
 }
 
 // Not in data helper to avoid import cycle
-pub fn find_persona(persona_name: String, global_personas: &Vec<Persona>) -> Option<&Persona> {
-    let persona_o = global_personas.into_iter().find(|x| x.name == persona_name);
-    persona_o
+pub fn find_persona(persona_name: String, global_personas: &[Persona]) -> Option<&Persona> {
+    global_personas.iter().find(|x| x.name == persona_name)
 }
 
 // Struct to handle JSON structure of a persona game fusion data
@@ -120,7 +119,7 @@ pub struct NamedRecipe {
 }
 
 impl NamedRecipe {
-    pub fn named_recipe_to_recipe(self, personas: &Vec<Persona>) -> Recipe {
+    pub fn named_recipe_to_recipe(self, personas: &[Persona]) -> Recipe {
         //unwraping because all personas should exist
         let result = find_persona(self.result, personas).unwrap().clone();
         let sources: Vec<Persona> = self
@@ -128,6 +127,6 @@ impl NamedRecipe {
             .into_iter()
             .map(|name| find_persona(name, personas).unwrap().clone())
             .collect();
-        Recipe::recipe(sources, result)
+        Recipe::new(sources, result)
     }
 }
